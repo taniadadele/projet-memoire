@@ -1,0 +1,152 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2005-2007 by Dominique Laporte(C-E-D@wanadoo.fr)
+   Copyright (c) 2006 by FG (persofg@gmail.com)
+   Copyright (c) 2006 by Nordine Zetoutou (nordine.zetoutou@educagri.fr)
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : stats_items.htm
+ *		projet   : la page de la liste des articles des utilisateurs
+ *
+ *		version  : 1.0
+ *		auteur   : laporte
+ *		creation : 4/03/06
+ *		modif    : 8/06/05 par FG
+ *                     migration -> PHP5
+ * 		           17/07/06 - par Nordine Zetoutou
+ * 	                 migration des balises HTML en XHTML 1.0 strict
+ */
+
+
+$ID = ( @$_POST["ID"] )		// ID de l'utilisateur
+	? (int) $_POST["ID"]
+	: (int) @$_GET["ID"] ;
+?>
+
+
+<div class="maintitle" style="background-image: url('<?php echo $_SESSION["CfgHeader"]; ?>'); background-repeat: repeat;">
+	<div style="text-align: center;">
+		<?php print($msg->read($STATS_LIST)); ?>
+	</div>
+</div>
+
+<div class="maincontent">
+
+	<?php
+		// liste des auteurs
+		$query  = "select _ID, _IDitem, _date, _IDgrprd, _title, _texte, _file, _size, _IDcat, _ver, _IDlicense ";
+		$query .= "from resource_items ";
+		$query .= ( $ID ) ? "where  _ID = '$ID' " : "" ;
+		$query .= "order by _ID";
+
+		$result = mysqli_query($mysql_link, $query);
+		$row    = ( $result ) ? remove_magic_quotes(mysqli_fetch_row($result)) : 0 ;
+
+		$userid = 0;
+
+		if ( $row ) {
+			print("<table class=\"width100\">");
+
+			while ( $row ) {
+				if ( $userid != $row[0] ) {
+					$return = mysqli_query($mysql_link, "select _IDgrp, _name, _create, _IDcentre, _res from user_id where _ID = '$row[0]' limit 1");
+					$who    = ( $return ) ? remove_magic_quotes(mysqli_fetch_row($return)) : 0 ;
+
+					// lecture du centre
+					$return = mysqli_query($mysql_link, "select _ident from config_centre where _IDcentre = '$who[3]' AND _lang = '".$_SESSION["lang"]."' limit 1");
+					$centre = ( $return ) ? remove_magic_quotes(mysqli_fetch_row($return)) : 0 ;
+
+					// lecture du groupe
+					$return = mysqli_query($mysql_link, "select _ident from user_group where _IDgrp = '$who[0]' AND _lang = '".$_SESSION["lang"]."' limit 1");
+					$groupe = ( $return ) ? remove_magic_quotes(mysqli_fetch_row($return)) : 0 ;
+
+					// contact par post-it
+					$mailto = getUserNameByID($row[0]);
+
+					print("
+			      	     <tr>
+			            	   <td style=\"width:44%;\"></td>
+			            	   <td style=\"width:2%;\" class=\"valign-top align-center\">
+							<img src=\"".$_SESSION["ROOTDIR"]."/images/smiley/$who[0].gif\" title=\"\" alt=\"\" /><br/>
+							<span class=\"x-small\"><strong>$groupe[0]</strong></span>
+					         </td>
+					         <td style=\"width:44%;\" class=\"valign-top align-left\">
+							$mailto<br/>
+							<span class=\"x-small\">". $msg->read($STATS_CENTER) ." $centre[0]</span><br/>
+							<span class=\"x-small\">". $msg->read($STATS_REGISTER) ." ". date2longfmt($who[2])."</span><br/>
+							<span class=\"x-small\">". $msg->read($STATS_ARTICLE) ." $who[4]</span>
+					         </td>
+					     </tr>
+						");
+
+					$userid = $row[0];
+					}
+
+				$return = mysqli_query($mysql_link, "select _nom, _IDres from resource_data where _IDcat = '$row[8]'");
+				$cat    = ( $return ) ? remove_magic_quotes(mysqli_fetch_row($return)) : 0 ;
+
+				if ( $row[3] & pow(2, $_SESSION["CnxGrp"] - 1 ) ) {
+					// recherche de la matière
+					$return  = mysqli_query($mysql_link, "select _titre from resource where _IDres = '$cat[1]' AND _lang = '".$_SESSION["lang"]."' limit 1");
+					$matiere = ( $return ) ? remove_magic_quotes(mysqli_fetch_row($return)) : 0 ;
+
+					// on filtre les caractères accentués
+					$path  = stripaccent("$DOWNLOAD/ressources/$matiere[0]/$cat[0]/v$row[9]-$row[6]");
+
+					// lien des ressources
+					$lien  = myurlencode("index.php?file=$path");
+
+					// description du menu popup sur le lien
+					$desc  = $msg->read($STATS_CATEGORY) ." $matiere[0]<br/>";
+					$desc .= $msg->read($STATS_CATEGORY) ." $row[9].<br/>";
+
+					// lecture de la license
+					if ( $row[10] ) {
+						$res   = mysqli_query($mysql_link, "select _texte from resource_license where _IDlicense = '$row[10]' AND _lang = '".$_SESSION["lang"]."' limit 1");
+						$lic   = ( $res ) ? remove_magic_quotes(mysqli_fetch_row($res)) : 0 ;
+						$desc .= $msg->read($STATS_LICENSE) ." $lic[0]";
+						}
+
+					$link  = "<a href=\"$lien\" class=\"overlib\" onclick=\"window.open(this.href, '_blank'); return false;\">$row[4]<span>$desc</span></a>";
+					}
+				else
+					$link  = $row[4];
+
+				print("
+		      	     <tr>
+				         <td class=\"align-right valign-top\">
+						<strong>$link</strong><br/>
+						<span class=\"x-small\"><strong>$cat[0]</strong></span><br/>
+						<span class=\"x-small\">".date2longfmt($row[2]).", ". $msg->read($STATS_BYTE, number_format($row[7], 0, ",", " ")) ."</span><br/>
+						<span class=\"x-small\">$row[5]&nbsp;</span>
+				         </td>
+		            	   <td class=\"align-center valign-top\"><img src=\"".$_SESSION["ROOTDIR"]."/images/mime/extension($row[6]).gif\" title=\"\" alt=\"\" /></td>
+		            	   <td></td>
+				     </tr>
+					");
+
+				$row  = remove_magic_quotes(mysqli_fetch_row($result));
+				}	// endwhile row
+
+	      	print("</table>");
+			}	// endif row
+	?>
+
+</div>

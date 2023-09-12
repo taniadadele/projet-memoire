@@ -1,0 +1,14 @@
+{
+    "name": "Prométhée-Solutions",
+    "short_name": "PROM",
+    "theme_color": "#ffffff",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "start_url": "/mobile.php",
+    "scope": "/",
+    "description": "ENT Prométhée-Solutions",
+    "orientation": "any",
+    "icons": [
+
+    ]
+}

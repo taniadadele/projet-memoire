@@ -1,0 +1,215 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2002-2007 by Dominique Laporte(C-E-D@wanadoo.fr)
+   Copyright (c) 2006 by Hugues Lecocq(hugues.lecocq@laposte.net)
+   Copyright (c) 2006 by Nordine Zetoutou (nordine.zetoutou@educagri.fr)
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : flash_visu.htm
+ *		projet   : la page de visualisation des flash-infos
+ *
+ *		version  : 1.1
+ *		auteur   : laporte
+ *		creation : 20/10/02
+ *		modif    : 14/06/03 - par D. Laporte
+ *                     implémentation des accès par groupes
+ *                     15/06/06 - par hugues lecocq
+ *                     migration PHP5
+ *		           17/07/06 - Nordine Zetoutou
+ * 	                 migration des balises HTML en XHTML 1.0 strict
+ */
+
+
+$IDinfos = (int) @$_GET["IDinfos"];		// ID du flash infos
+$IDpj    = (int) @$_GET["IDpj"];		// ID de la pièce jointe
+$IDflash = ( strlen(@$_POST["IDflash"]) )	// identifiant des flash infos
+	? (int) $_POST["IDflash"]
+	: (int) (strlen(@$_GET["IDflash"]) ? $_GET["IDflash"] : 0);
+$skpage  = ( @$_GET["skpage"] )		// n° de la page affichée
+	? (int) $_GET["skpage"]
+	: 1 ;
+$skshow  = ( @$_GET["skshow"] )		// n° du flash info
+	? (int) $_GET["skshow"]
+	: 1 ;
+?>
+
+
+<?php
+	// affichage des absences sur page d'accueil
+	require_once RESSOURCE_PATH['PAGES_FOLDER'].'absent/absent_flash.php';
+
+	// suppression des PJ
+	if ( $IDpj < 0 ) {
+		$query  = "delete from flash_pj ";
+		$query .= "where _IDpj = '".abs($IDpj)."' ";
+		$query .= "limit 1";
+
+		if ( $_SESSION["CnxAdm"] == 255 )
+			if ( mysqli_query($mysql_link, $query) )
+				unlink("$DOWNLOAD/flash/".abs($IDpj).".".@$_GET["ext"]);
+		}
+
+	// lecture du flash par défaut
+	$flash = Array();
+
+	if ( !$IDflash ) {
+		// on sélectionne les flash info en page d'accueil
+		$query  = "select distinctrow flash_default._IDflash ";
+		$query .= "from flash_default, flash ";
+		$query .= "where flash_default._IDcentre = '".$_SESSION["CnxCentre"]."' ";
+		$query .= "AND (flash_default._IDgrp & ".pow(2, $_SESSION["CnxGrp"] - 1).") ";
+		$query .= "AND flash_default._lang = '".$_SESSION["lang"]."' ";
+		$query .= "AND flash._visible = 'O' ";
+		$query .= "AND (flash._IDgrprd & pow(2, ".$_SESSION["CnxGrp"]." - 1)) ";
+		$query .= "AND flash._IDflash = flash_default._IDflash ";
+
+		$result = mysqli_query($mysql_link, $query);
+		$row    = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+		$i = 0;
+		while ( $row ) {
+			$flash[$i++] = $row[0];
+			$row         = mysqli_fetch_row($result);
+			}
+
+		// si aucun flash info, on sélectionne le flash par défaut
+		if ( count($flash) == 0 ) {
+			$result = mysqli_query($mysql_link, "select _IDflash from flash where _title = '$FLASH' AND _lang = '".$_SESSION["lang"]."' limit 1");
+			$flash  = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+			// si le flash info par défaut n'est pas définit, on affiche la page d'accueil Prométhée
+			// if ( !$flash ) {
+			// 	$result = mysqli_query($mysql_link, "select _IDflash from flash where _template = 'promethee.htm' AND _lang = '".$_SESSION["lang"]."' limit 1");
+			// 	$flash  = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+			// 	}
+			}
+		}
+	else
+		$flash[0] = $IDflash;
+
+	// affichage des flash info
+	@sort($flash);
+
+	for ($i = 0; $i < count($flash); $i++) {
+		$IDflash = $flash[$i];
+
+		$query   = "select _title, _IDmod, _IDgrprd, _create, _template, _IDgrpwr from flash ";
+		$query  .= "where _IDflash = '$IDflash' ";
+ 		$query  .= "AND _lang = '".$_SESSION["lang"]."' ";
+ 		$query  .= "AND _visible = 'O' ";
+ 		$query  .= "limit 1";
+
+		$res     = mysqli_query($mysql_link, $query);
+		$sql     = ( $res ) ? remove_magic_quotes(mysqli_fetch_row($res)) : 0 ;
+
+		switch ( $sql[4] ) {
+			// case "promethee.htm" :
+			// 	require "flash_promethee.htm";
+			// 	break;
+
+			default :
+				// initialisation
+				$IDinfos = 0;
+
+				// // si pas d'autorisation => affichage de la page d'accueil Prométhée
+				// if ( $_SESSION["CnxAdm"] != 255 AND $_SESSION["CnxID"] != $sql[1] AND ($sql[2] & pow(2, $_SESSION["CnxGrp"] - 1)) == 0 )
+					// require "flash_promethee.htm";
+				// else {
+					// lecture de la base de données
+					$Query  = "select _IDinfos, _date, _modif, _ID from flash_data ";
+					$Query .= "where _IDflash = '$IDflash' ";
+					$Query .= ( $_SESSION["CnxAdm"] != 255 AND $_SESSION["CnxID"] != $sql[1] )
+						? "AND _visible = 'O' "
+						: "" ;
+					$Query .= ( $sql[3] == "O" )
+						? "order by _IDinfos desc"
+						: "order by _modif desc" ;
+
+					// détermination du nombre de pages
+					$result = mysqli_query($mysql_link, $Query);
+					$page   = ( $result ) ? mysqli_affected_rows($mysql_link) : 0 ;
+
+					if ( $page ) {
+						// initialisation
+						$first = $skpage;
+
+						// se positionne sur la page ad hoc
+						mysqli_data_seek($result, $first - 1);
+						$data  = remove_magic_quotes(mysqli_fetch_row($result));
+
+						// ID de la 1ère annonce
+						$IDinfos = $data[0];
+
+						$modif = ( $data[1] == $data[2] ) ? "" : $msg->read($FLASH_MODIFIED, $data[2]) ;
+
+						// lecture du propriétaire
+						$owner = $msg->read($FLASH_CREATED, Array(getUserNameByID($data[3]), $data[1], $modif));
+
+						$show  = ( $page % $MAXSHOW )
+							? (int) ($page / $MAXSHOW) + 1
+							: (int) ($page / $MAXSHOW) ;
+
+						$lien  = "<a class=\"\" href=\"".myurlencode("index.php?item=20&IDflash=$IDflash&cmde=post&submit=Modifier&IDinfos=$IDinfos")."\" title=\"$sql[0]\" >";
+						$lien .= "<i class=\"fas fa-pencil-alt\" title=\"".$msg->read($FLASH_MODIF)."\"></i>";
+						$lien .= "</a>";
+					}
+					else {
+						$owner = "&nbsp;";
+
+						// initialisation
+						$show  = $skshow;
+
+						$lien  = "<a href=\"".myurlencode("index.php?item=20&IDflash=$IDflash&cmde=post")."\" title=\"$sql[0]\" >";
+						$lien .= "<i class=\"fas fa-plus\" title=\"".$msg->read($FLASH_FLASHCREATE)."\"></i>";
+						$lien .= "</a>";
+					}
+
+					// nouveau flash autorisé pour :
+					// le grand chef
+					// le propriétaire du flash
+					// les modérateurs associés au groupe des rédacteurs
+					$link   = ( $_SESSION["CnxAdm"] == 255 OR $_SESSION["CnxID"] == $sql[1] OR ($sql[1] == -1 AND ($sql[5] & pow(2, $_SESSION["CnxGrp"] - 1))) )
+						? $lien
+						: "&nbsp;" ;
+
+					$next = $prev = $choix = "";
+
+					if ( $IDinfos ) {
+						// visualisation du flash
+						require "flash_visu.php";
+
+						}
+					else {
+						print("<p class=\"center\"><img src=\"".$_SESSION["ROOTDIR"]."/images/warning.png\" title=\"\" alt=\"\" /></p>");
+						$choix = $msg->read($FLASH_NOTEXIST);
+						}
+
+					// print("
+					// 	<hr style=\"width:80%;\" />
+					//
+					// 	<p class=\"center\">$prev $choix $next</p>
+					//
+				  //     	</div>
+					// 	");
+					// }	// endif autorisation ok
+				break;
+			}	// end switch
+		}	// end for
+?>

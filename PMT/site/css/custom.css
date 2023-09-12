@@ -1,0 +1,79 @@
+.link-unstyled, .link-unstyled:link, .link-unstyled:hover {
+  color: inherit !important;
+  text-decoration: inherit !important;
+}
+
+
+
+/* Quand menu réduit */
+/* On affiche le petit logo */
+.sidebar.toggled .sidebar-brand .sidebar-brand-logo-square {
+  display: inline;
+}
+/* On cache le logo en grand */
+.sidebar.toggled .sidebar-brand .sidebar-brand-logo-large {
+  display: none;
+}
+
+/* Quand menu étendu */
+/* On cache le petit logo */
+.sidebar .sidebar-brand .sidebar-brand-logo-large {
+  display: inline;
+}
+/* On affiche le logo en grand */
+.sidebar .sidebar-brand .sidebar-brand-logo-square {
+  display: none;
+}
+
+
+
+.sidebar-brand {
+  height: 110px !important;
+}
+
+.sidebar-brand > img {
+  max-height: 100px !important;
+}
+
+
+
+/* Tag-IT */
+.tagit-autocomplete {
+  z-index: 9999999999 !important;
+}
+
+.hidden {
+  display: none !important;
+}
+
+
+.scroll-to-top {
+  z-index: 99999999999;
+}
+
+
+
+
+
+.profile-header-container{
+    margin: 0 auto;
+    text-align: center;
+}
+
+.profile-header-img {
+    padding: 10px;
+}
+
+.profile-header-img > img.img-circle {
+    width: 120px;
+    height: 120px;
+}
+
+.profile-header {
+    margin-top: 43px;
+}
+
+.image-bottom-label-container {
+    margin-top: -19px;
+    text-align: center;
+}

@@ -1,0 +1,24 @@
+# Crédits
+#
+# Le projet Prométhée a eu des contributeurs à divers niveaux.
+# Voici le Hall des Héros :
+#
+
+Bastos Oscar Roberto <orbastos@orange.fr> : administrador del portal español de promethee.eu.org - Ploërmel (56)
+Cormenzana Fernando <fcormenzana@gmail.com> : traducción española - NeXT asesores, Montevideo (Uruguay)
+#Delage Laurent <laurent@2lage.org> : Maintenor del paquete de Prométhée para la distribución de Debian - EN Limoges (87)
+Duval didier <didier.duval@educagri.fr> : beta tester - EPL de Nimes-Rodilhan (30)
+Fresne Cyril <cyril.fresne@gmail.com> : contribuidor - Lycée Gaston Barré, Niort (79)
+Garrault Corentin <corentin@educonline.net> : Maintenor de Debian - collège Olivier de Serres, Viry Chatillon (91)
+Gaudillat Eric <eric.gaudillat@gmail.com> : traducción inglesa - Collège de Rivière Salée, Nouméa (98)
+Ghirardi Cédric <cedric.ghirardi@educagri.fr> : ayuda y despliegue - EPL de Digne-Carmejane (04)
+Hervouet François <tribu.hervouetarnaud@free.fr> : beta tester y redactor - Lycée Ste Marie, Chantonnay (85)
+Laporte Dominique <dominique.laporte@educagri.fr> : désarrollador, jefe del proyecto - EPL de Gap (05)
+Lecocq Hugues <hugues.lecocq@laposte.net> : contribuidor - Lycée des Mascareignes, Ile Maurice (999) 
+Louédin Stéphane <stef@neni.org> : dialDirect désarrollador - freelance (44)
+Poyet Frédéric <frederic.poyet@free.fr> : contribuidor - Collège Bibracte, Château-Chinon (58)
+Ribreau François-Guillaume <persofg@gmail.com> : averías de seguridad - Lycée Ste Marie, Chantonnay (85)
+Roy Didier <miraceti@free.fr> : beta tester y contribuidor - collège Rambaud, La Brède (33)
+Sdei Sandra <sandra.sdei@educagri.fr> : corrector de pruebas - CRIPT Rhône-Alpes section informatique (26)
+Tournier Hubert <hubert@frbsd.org> : administrador del servidor de promethee.eu.org - Chaville (92)
+Zetoutou Nordine <nordine.zetoutou@educagri.fr> : CNERTA désarrollador - Dijon (21)

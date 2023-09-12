@@ -1,0 +1,401 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2002-2007 by Dominique Laporte(C-E-D@wanadoo.fr)
+   Copyright (c) 2006 by FG (persofg@gmail.com)
+   Copyright (c) 2006 by Nordine Zetoutou (nordine.zetoutou@educagri.fr)
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : stats.htm
+ *		projet   : la page des statistiques
+ *
+ *		version  : 1.1
+ *		auteur   : laporte
+ *		creation : 17/11/02
+ *		modif    : 12/12/02 - par D. Laporte
+ *		           affichage des stats par pages
+ *		           4/06/05 par FG
+ *                     migration -> PHP5
+ * 		           17/07/06 - par Nordine Zetoutou
+ * 	                 migration des balises HTML en XHTML 1.0 strict
+ */
+?>
+
+
+
+
+
+<?php
+	$query  = "select _ID from user_id ";
+	$query .= "where _create = '0000-00-00 00:00:00'";
+
+	$result = mysqli_query($mysql_link, $query);
+	$nbwait = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select _ID from user_id where _adm = '255'");
+	$su     = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select _IDitem from resource_items");
+	$news   = ( $result ) ? mysqli_num_rows($result) : 0 ;
+	$news   = ( $news )
+		? '<a href="index.php?item='.$item.'&amp;cmde=items">'.$news.'</a>'
+		: $news ;
+
+	$result = mysqli_query($mysql_link, "select _IDmsg from forum_items");
+	$nbmsg  = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select _IDmsg from forum_items where _visible == 'N'");
+	$wait   = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select _IDinfos from flash_data");
+	$info   = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	// On récupère la version de la BDD
+	$result = mysqli_query($mysql_link, "select _version from config_database where _retcode = '0' order by _IDconf desc limit 1");
+	$row    = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+	$dba    = "<a href=\"".myurlencode("index.php?item=$item&cmde=dba")."\">$row[0]</a>";
+
+	$result = mysqli_query($mysql_link, "show tables from $DATABASE");
+	$tables = ( $result ) ? mysqli_num_rows($result) : 0 ;
+?>
+
+
+
+
+
+
+
+<?php
+	// formattage des donnée pour remplacer la fonction bcdiv
+	function bcdiv2($nb_visite, $nb_visiteur, $nb_decimal)
+	{
+		$resultat = 0;
+
+		if ( $nb_visiteur ) {
+			$resultat = $nb_visite / $nb_visiteur;
+			$resultat = number_format($resultat, $nb_decimal, ',', '.');
+		}
+
+		return $resultat;
+	}
+
+	$today  = date("Y-m-d");
+	$hier   = date("Y-m-d", time() - 86400);
+
+	$result = mysqli_query($mysql_link, "select _date from stat_log order by _date desc limit 1");
+	$last   = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select _date from stat_log where _date >= '$today 00:00:00' order by _date asc limit 1");
+	$first  = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select distinctrow _ID from stat_log where _date like '$today%'");
+	$usr1   = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select distinctrow _ID from stat_log where _date >= '$hier 00:00:00' AND _date < '$today 00:00:00'");
+	$usr2   = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	$result = mysqli_query($mysql_link, "select _ID from stat_page where _date like '$today%'");
+	$page   = ( $result ) ? mysqli_num_rows($result) : 0 ;
+
+	$nbpage = ( $usr1 ) ? bcdiv2($page, $usr1, 2) : 0 ;
+?>
+
+
+
+<?php
+if (isset($_GET["toggle"])) {
+	$result = mysqli_query($mysql_link, "select _ID from stat_page where _date");
+	$page   = ( $result ) ? mysqli_num_rows($result) : 0 ;
+}
+
+$result = mysqli_query($mysql_link, "select distinctrow _ident from stat_page order by _ident");
+$row    = ( $result ) ? remove_magic_quotes(mysqli_fetch_row($result)) : 0 ;
+
+$i   = 0;
+$max = 0;
+
+while ( $row ) {
+	// lecture service
+	$start     = strpos($msg->read($STATS_STATLABEL), $row[0]) + strlen($row[0]) + 2;
+	$end       = strpos($msg->read($STATS_STATLABEL), ",", $start);
+	$st[0][$i] = substr($msg->read($STATS_STATLABEL), $start, $end - $start);
+
+	$query     = "select _ident from stat_page where _ident = '$row[0]' ";
+	$query    .= (isset($_GET["toggle"]))
+		? ""
+		: "AND _date like '$today%'";
+
+	$return    = mysqli_query($mysql_link, $query);
+
+	$st[2][$i] = ( $return ) ? mysqli_num_rows($return) : 0 ;
+
+	$st[3][$i] = ( $page )
+		? bcdiv2(100 * $st[2][$i], $page, 2)
+		: 0 ;
+
+	$st[1][$i] = ( $page )
+		? bcdiv2(100 * $st[2][$i], $page, 0)
+		: 0 ;
+
+	$max       = ( $max < $st[2][$i] )
+		? $st[2][$i]
+		: $max ;
+
+	$row = remove_magic_quotes(mysqli_fetch_row($result));
+	$i++;
+}
+?>
+
+
+
+
+
+<?php
+// --------------------------------------------------------------------
+function show_activity($title, $query)
+{
+	require "globals.php";
+
+	$result = mysqli_query($mysql_link, $query);
+	$row    = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+	print("<p style=\"margin-top: 10px; margin-bottom: 5px;\"><strong>$title</strong></p>");
+
+	if ( $row ) {
+		print("
+		<div style=\"padding:4px;\">
+			<table class=\"table table-hover\">");
+
+				while ( $row ) {
+					$r = (int) ($row[1] / $HITBYSTAR);
+					$r = ( $r > $MAXSTAR ) ? $MAXSTAR : $r ;
+
+
+					echo '<tr>';
+						echo '<td style="width:30%;">';
+							for ($i = 0; $i < $r; $i++) echo '<i class="fas fa-star"></i>';
+							for ($i = 0; $i < ($MAXSTAR - $r); $i++) echo '<i class="far fa-star"></i>';
+						echo '</td>';
+						echo '<td style="width:85%;">'.getUserNameByID($row[0]).'<span class="x-small"> ('.$row[1].')</span></td>';
+					echo '</tr>';
+
+					$row = mysqli_fetch_row($result);
+				}
+
+			print("
+			</table>
+		</div>");
+	}
+}
+// --------------------------------------------------------------------
+?>
+
+
+
+<div class="maintitle" style="background-image: url('<?php echo $_SESSION["CfgHeader"]; ?>'); background-repeat: repeat;">
+	<div style="text-align: center;">
+		<?php print($msg->read($STATS_STATS)); ?>
+	</div>
+</div>
+
+<div class="maincontent">
+
+
+
+
+	<!-- statistiques d'utilisation -->
+	<div style="width:49%; /* padding:4px; */ display: inline-block; float: left; vertical-align: top;">
+		<p style="margin-top: 5px; margin-bottom: 5px;"><?php print($msg->read($STATS_TITLE)); ?></p>
+		<table class="table table-hover">
+
+			<?php
+				$table_rows = array(
+					$msg->read($STATS_VISITOR) => strstr($first[0], " "),
+					$msg->read($STATS_LASTVISIT) => strstr($last[0], " "),
+					$msg->read($STATS_NBVISIT) => $msg->read($STATS_YESTERDAY, Array(strval($usr1), strval($usr2))),
+					$msg->read($STATS_HIT) => $page,
+					$msg->read($STATS_HITPAGE) => $nbpage
+				);
+
+				foreach ($table_rows as $key => $value) {
+					echo '<tr>';
+						echo '<td>'.$key.'</td>';
+						echo '<td>'.$value.'</td>';
+					echo '</tr>';
+				}
+			?>
+		</table>
+	</div>
+
+	<div style="width: 49%; display: inline-block; float: right; vertical-align: top;">
+		<table style="width: 100%;">
+			<p style="margin-top: 10px; margin-bottom: 5px;"><?php print($msg->read($STATS_OTHER)); ?></p>
+
+			<td style="width:49%; padding:4px;" class="valign-top">
+				<table class="table table-hover">
+					<tr>
+						<td style="width:80%;"><?php print($msg->read($STATS_RECUSERS)); ?></td>
+						<td style="width:20%;"><strong><?php echo $nbwait; ?></strong></td>
+					</tr>
+					<?php
+						// lecture des différents droits utilisateur
+						$query  = "select _adm, _ident from user_admin where _lang = '".$_SESSION["lang"]."' order by _adm";
+						$result = mysqli_query($mysql_link, $query);
+						$row    = ( $result ) ? remove_magic_quotes(mysqli_fetch_row($result)) : 0 ;
+
+						while ( $row ) {
+							$return = mysqli_query($mysql_link, "select _ID from user_id where (_adm & $row[0])");
+							$nbval  = ( $return ) ? mysqli_num_rows($return) : 0 ;
+
+							switch ( $row[0] ) {
+								case 255 : $nbval = $su; break;
+								case 0 :
+								case 1 :
+									break;
+								default : $nbval -= $su; break;
+							}
+
+							echo '<tr>';
+								echo '<td>'.$row[1].'</td>';
+								echo '<td><strong>'.$nbval.'</strong></td>';
+							echo '</tr>';
+
+							$row = remove_magic_quotes(mysqli_fetch_row($result));
+						}
+					?>
+				</table>
+			</td>
+
+			<td style="width:2%;"></td>
+
+			<td style="width:49%; padding:4px;" class="valign-top">
+				<table class="table table-hover">
+					<?php
+						$table_rows = array(
+							$msg->read($STATS_PUBLISHED) => $news,
+							$msg->read($STATS_MSGSENT) => $nbmsg,
+							$msg->read($STATS_MSGWAITING) => $wait,
+							$msg->read($STATS_FLASH) => $info,
+							$msg->read($STATS_PMTVERSION) => $VERSION,
+							$msg->read($STATS_PHPVERSION) => phpversion(),
+							$msg->read($STATS_DBAVERSION) => $dba,
+							$msg->read($STATS_NBTABLES) => $tables
+						);
+
+						foreach ($table_rows as $key => $value) {
+							echo '<tr>';
+								echo '<td>'.$key.'</td>';
+								echo '<td><strong>'.$value.'</strong></td>';
+							echo '</tr>';
+						}
+					?>
+				</table>
+			</td>
+			</tr>
+		</table>
+
+	</div>
+
+
+
+
+	<table class="width100">
+		<tr>
+			<td style="width:49%;" class="valign-top">
+				<?php
+					$title = $msg->read($STATS_MSGUSER);
+
+					$Query  = "select _ID, _msg from user_id where _msg > '0' ";
+					$Query .= ( getAccess() == 2 ) ? "AND _IDgrp > '1' " : "AND _IDgrp = '".$_SESSION["CnxGrp"]."' " ;
+					$Query .= "order by _msg desc limit 5";
+
+					show_activity($title, $Query);
+				?>
+			</td>
+
+			<td style="width:2%;"></td>
+
+			<td style="width:49%;" class="valign-top">
+				<?php
+					$title = $msg->read($STATS_RESUSER);
+
+					$Query  = ( getAccess() == 2 )
+						? "select _ID, _cnx from user_id where _cnx > '0' AND _IDgrp = '1' order by _cnx desc limit 5"
+						: "select _ID, _res from user_id where _res > '0' AND _IDgrp > '1' order by _res desc limit 5" ;
+
+					show_activity($title, $Query);
+				?>
+			</td>
+		</tr>
+	</table>
+
+
+
+	<?php
+		$day   = $TIMESTAT / (24 * 3600);
+		if (isset($_GET['toggle'])) $stat = 'Voir les données d\'aujourd\'hui';
+		else $stat = 'Voir les données des '.$day.' derniers jour';
+		if (isset($_GET["toggle"])) $link = 'index.php?item='.$item;
+		else $link = 'index.php?item='.$item.'&toggle=1';
+	?>
+
+
+	<p style="margin-top: 10px; margin-bottom: 5px;">
+		<?php
+			echo $msg->read($STATS_VISITED).'&nbsp;<a href="'.$link.'" class="btn">'.$stat.'</a>&nbsp;';
+			echo '<a href="stats_csv.php?month='.@$_GET["toggle"].'" class="btn"><i class="fa fa-upload"></i></a>';
+		?>
+	</p>
+
+
+	<div style="padding:4px;">
+		<table class="table table-hover">
+			<tr>
+				<td style="width:30%;"><?php print($msg->read($STATS_PAGE)); ?></td>
+				<td style="width:50%;"></td>
+				<td style="width:10%;" class="align-center"><?php print($msg->read($STATS_VISIT)); ?></td>
+				<td style="width:10%;" class="align-center"><strong>%</strong></td>
+			</tr>
+
+			<?php
+			for ($i = 0; $i < count($st[0]); $i++) {
+				$bar = ( $page ) ? bcdiv2(100 * $st[2][$i], $max, 0) : 0 ;
+
+				echo '<tr>';
+					echo '<td>'.$st[0][$i].'</td>';
+					echo '<td>';
+						echo '<div class="progress">';
+							echo '<div class="progress-bar bg-primary" role="progressbar" style="width: '.$bar.'%" aria-valuenow="'.$bar.'" aria-valuemin="0" aria-valuemax="100"></div>';
+						echo '</div>';
+					echo '</td>';
+					echo '<td class="align-center">'.$st[2][$i].'</td>';
+					echo '<td class="align-center">'.$st[3][$i].'%</td>';
+				echo '</tr>';
+			}
+			?>
+		</table>
+
+	</div>
+
+
+
+
+
+
+</div>

@@ -1,0 +1,82 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2006-2007 by Dominique Laporte(C-E-D@wanadoo.fr)
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : stats_dba.htm
+ *		projet   : la page historique des installations
+ *
+ *		version  : 1.0
+ *		auteur   : laporte
+ *		creation : 25/08/06
+ *		modif    : 
+ */
+?>
+
+
+<div class="maintitle" style="background-image: url('<?php echo $_SESSION["CfgHeader"]; ?>'); background-repeat: repeat;">
+	<div style="text-align: center;">
+		<?php print($msg->read($STATS_LOG)); ?>
+	</div>
+</div>
+
+<div class="maincontent">
+
+	<p style="background-color:#eeeeee; margin-top:0px; text-align:justify;"><?php print($msg->read($STATS_DISCLAIMER)); ?></p>
+
+            <table class="width100">
+              <tr>
+                <td class="align-center" style="background-color:#c0c0c0;width:20%;"><?php print($msg->read($STATS_VERSION)); ?></td>
+                <td class="align-center" style="background-color:#c0c0c0;width:50%;"><?php print($msg->read($STATS_DATE)); ?></td>
+                <td class="align-center" style="background-color:#c0c0c0;width:15%;"><?php print($msg->read($STATS_TABLE)); ?></td>
+                <td class="align-center" style="background-color:#c0c0c0;width:15%;"><?php print($msg->read($STATS_ERROR)); ?></td>
+              </tr>
+
+            <?php
+			//---- lecture des répertoires
+			$Query  = "select _version, _date, _IPv6, _retcode, _table, _lang from config_database ";
+			$Query .= "order by _IDconf desc";
+
+			$result = mysqli_query($mysql_link, $Query);
+			$row    = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+			$i = 0;
+			while ( $row ) {
+				$bgcolor = ( $i++ % 2 ) ? "item" : "menu" ;
+
+				print("
+					<tr class=\"$bgcolor\">
+          		    		  <td style=\"width:20%;\"><img src=\"".$_SESSION["ROOTDIR"]."/images/lang/ico-$row[5].png\" title=\"\" alt=\"\" /> $row[0]</td>
+		       		  <td style=\"width:50%;\">$row[1] ". resolveHostName($row[2]) ."</td>
+					  <td style=\"width:15%;\" class=\"align-center\">$row[4] &nbsp;</td>
+					  <td style=\"width:15%;\" class=\"align-center\">$row[3]</td>
+	       			</tr>
+	       			");
+
+				$row = mysqli_fetch_row($result);
+				}	
+            ?>
+            </table>
+
+		<hr/>
+
+		[ <?php print("<a href=\"index.php?item=$item\">".$msg->read($STATS_GOBACK)."</a>"); ?> ]
+
+</div>

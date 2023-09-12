@@ -1,0 +1,189 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2014 by Hervé DAZY
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : traduction.htm
+ *		projet   : la page de gestion des traductions
+ *
+ *		version  : 1.0
+ *		auteur   : IP SOLUTIONS
+ *		creation : 28/07/2014
+ *		modif    :
+ */
+
+
+
+
+	require "msg/traduction.php";
+	require_once "include/TMessage.php";
+
+	$msg  = new TMessage($_SESSION["ROOTDIR"]."/msg/".$_SESSION["lang"]."/traduction.php");
+
+	$tradlang    = @$_GET["tradlang"];
+	$filemodule    = @$_GET["filemodule"];
+
+
+//---------------------------------------------------------------------------
+?>
+
+
+
+<div class="maintitle" style="background-image: url('<?php echo $_SESSION["CfgHeader"]; ?>'); background-repeat: repeat;">
+	<div style="text-align: center;">
+		<?php print($msg->read($TRADUCTION_LANGUAGE))." : ".$tradlang." / "; print($msg->read($TRADUCTION_MODULE))." : ".$filemodule; ?>
+	</div>
+</div>
+
+<div class="maincontent">
+<form id="traduction" action="index.php?item=112&cmde=post&tradlang=<?php print $tradlang; ?>&filemodule=<?php print $filemodule; ?>" method="post">
+
+
+
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>CODE</th>
+                  <th><?php print($msg->read($TRADUCTION_VALUE)); ?></th>
+                </tr>
+              </thead>
+              <tbody>
+
+
+<?php
+
+
+// On ouvre le fichier de variables traduction
+
+
+$pathfilemsg = $_SESSION["ROOTDIR"]."/msg/".$filemodule.".php";
+$compteur = 1;
+
+$filetrad = fopen($pathfilemsg, 'a+');
+
+// On construit le tableau des codes
+
+$gotrad = 0;
+$listavalue = 0;
+$endtrad = 0;
+$avalue = array();
+
+while (!feof($filetrad)) { //on parcourt toutes les lignes
+  $ligne = fgets($filetrad, 4096);
+  if (substr($ligne, 0, 6) == 'static')
+  	{
+		$numligne = substr($ligne, strpos($ligne, "=")+2) ;
+    	$numligne = substr($numligne, 0, strpos($numligne, ";")) ;
+    	$ligne = substr($ligne, 3) ;
+    	$ligne = substr($ligne, 0, strpos($ligne, " ")) ;
+    	$ligne = substr($ligne, strpos($ligne, "PAGE_")+5) ;
+    	$avalue[$numligne] = $ligne;
+  	}
+
+
+}
+
+
+// On ferme le fichier
+fclose($pathfilemsg);
+
+
+
+// On ouvre le fichier de valeurs traduction
+
+
+$pathfilemsg = $_SESSION["ROOTDIR"]."/msg/".$tradlang."/".$filemodule.".php";
+$compteur = 1;
+
+$filetrad = file_get_contents($pathfilemsg, 'a+');
+$filetrad = substr($filetrad, strpos($filetrad, "Array(")+7);
+$filetrad = substr($filetrad, 0, strpos($filetrad, "//------------"));
+
+
+// On construit le tableau
+
+$gotrad = 0;
+$endtrad = 0;
+
+
+$value = explode("\",", $filetrad);
+
+
+foreach( $value as $ligne )
+{
+	$gotrad++;
+	if (substr($ligne, 0, 2) == ');')
+	{
+		$endrad = 1;
+	}
+
+	//$ligne = nl2br($ligne);
+	//$ligne = substr($ligne, 1);
+	//$ligne = str_replace("\"\n\n);", "", $ligne);
+	//$ligne = str_replace("\n\");", "", $ligne);
+	$ligne = str_replace('");', "", $ligne);
+	$ligne = substr($ligne, strpos($ligne, '"')+1);
+
+	if(strpos($ligne, ");"))
+	{
+		$finligne = substr($ligne, -10);
+		if (strpos($finligne, '"')) $ligne = substr($ligne, 0, strrpos($ligne, '"'));
+	}
+
+	//echo "---".$ligne."---";
+	print "<tr><td>".$compteur++."</td><td>".$avalue[$compteur-2]."</td>";
+	print "<td><input type='text' name='".$compteur."-".$avalue[$compteur-2]."' value='".htmlspecialchars ($ligne, ENT_QUOTES, "iso-8859-1")."' style='width: 700px;'></td></tr>";
+}
+
+
+
+
+// On ferme le fichier
+fclose($pathfilemsg);
+
+
+?>
+
+
+              </tbody>
+            </table>
+
+<hr style="width:80%;" />
+ <table style="width: 140px;">
+   <tr>
+	  <td style="width:20%;" class="valign-middle align-right">
+		<?php // print("<input type=\"image\" src=\"".$_SESSION["ROOTDIR"]."/images/lang/".$_SESSION["lang"]."/valid.gif\" name=\"valid\">"); ?>
+		<button type="submit" class="btn btn-success">Valider</button>
+	  </td>
+
+   </tr>
+
+   <tr>
+	  <td class="valign-middle align-right">
+		<?php // print("<a href=\"index.php\"><img src=\"".$_SESSION["ROOTDIR"]."/images/lang/".$_SESSION["lang"]."/cancel.gif\" />"); ?></a>
+		<a href="index.php" class="btn btn-danger">Fermer</a>
+	  </td>
+
+   </tr>
+ </table>
+</form>
+</div>

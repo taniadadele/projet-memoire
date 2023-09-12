@@ -1,0 +1,4 @@
+RewriteRule .*\.(php) - [F,L,NC]
+
+Order allow,deny
+Deny from all

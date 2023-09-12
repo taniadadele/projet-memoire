@@ -1,0 +1,25 @@
+# Crédits
+#
+# Le projet Prométhée a eu des contributeurs à divers niveaux.
+# Voici le Hall des Héros :
+#
+
+Bastos Oscar Roberto <orbastos@orange.fr> : administrateur du portail espagnol promethee.eu.org - Ploërmel (56)
+Brice Sébastien <sebastien.brice@educagri.fr> : mainteneur paquet Prométhée pour distribution Debian - LPA d'Aumont (02)
+Cormenzana Fernando <fcormenzana@gmail.com> : traduction espagnole - NeXT asesores, Montevideo (Uruguay)
+#Delage Laurent <laurent@2lage.org> : mainteneur paquet Prométhée pour distribution Debian - EN Limoges (87)
+Duval didier <didier.duval@educagri.fr> : bêta testeur - EPL de Nimes-Rodilhan (30)
+Fresne Cyril <cyril.fresne@gmail.com> : contributeur - Lycée Gaston Barré, Niort (79)
+Garrault Corentin <corentin@educonline.net> : contributeur et support Debian - collège Olivier de Serres, Viry Chatillon (91)
+Gaudillat Eric <eric.gaudillat@gmail.com> : traduction anglaise - Collège de Rivière Salée, Nouméa (98)
+Ghirardi Cédric <cedric.ghirardi@educagri.fr> : support et déploiement - EPL de Digne-Carmejane (04)
+Hervouet François <tribu.hervouetarnaud@free.fr> : bêta testeur et rédacteur - Lycée Ste Marie, Chantonnay (85)
+Laporte Dominique <dominique.laporte@educagri.fr> : développeur, chef de projet - EPL de Gap (05)
+Lecocq Hugues <hugues.lecocq@laposte.net> : contributeur - Lycée des Mascareignes, Ile Maurice (999) 
+Louédin Stéphane <stef@neni.org> : développeur dialDirect - freelance (44)
+Poyet Frédéric <frederic.poyet@free.fr> : contributeur - Collège Bibracte, Château-Chinon (58)
+Ribreau François-Guillaume <persofg@gmail.com> : failles de sécurité - Lycée Ste Marie, Chantonnay (85)
+Roy Didier <miraceti@free.fr> : bêta testeur et contributeur - collège Rambaud, La Brède (33)
+Sdei Sandra <sandra.sdei@educagri.fr> : relectrice - CRIPT Rhône-Alpes section informatique (26)
+Tournier Hubert <hubert@frbsd.org> : administrateur du serveur promethee.eu.org - Chaville (92)
+Zetoutou Nordine <nordine.zetoutou@educagri.fr> : développeur CNERTA - Dijon (21)

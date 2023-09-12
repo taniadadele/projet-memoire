@@ -1,0 +1,17 @@
+version: "3"
+services:
+  php:
+    build:
+      context: .
+      dockerfile: site/Dockerfile
+    ports:
+      - "8080:80" # Map container port 80 to host port 8080
+    depends_on:
+      - db
+  db:
+    container_name: database
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    ports:
+      - "3306:3306"

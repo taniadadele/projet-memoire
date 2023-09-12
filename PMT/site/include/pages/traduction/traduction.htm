@@ -1,0 +1,169 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2014 by Hervé DAZY
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : traduction.htm
+ *		projet   : la page de gestion des traductions
+ *
+ *		version  : 1.0
+ *		auteur   : Dazy
+ *		creation : 28/07/2014
+ *		modif    :
+ */
+
+
+
+
+	require "msg/traduction.php";
+	require_once "include/TMessage.php";
+
+	$msg  = new TMessage($_SESSION["ROOTDIR"]."/msg/".$_SESSION["lang"]."/traduction.php");
+
+$numpage = array(
+"page"   => "2",
+"forum"   => "3",
+"postit"   => "4",
+"gallery"   => "5",
+"spip"   => "6",
+"stats"   => "7",
+"agenda"   => "8",
+"campus"   => "9",
+"reservation"   => "10",
+"liaison"   => "12",
+"ctn"   => "113",
+"ctn_v12"   => "113",
+"chat"   => "14",
+"fil"   => "15",
+"pfolio"   => "16",
+"egroup"   => "17",
+"motd"   => "18",
+"cms"   => "19",
+"flash_promethee"   => "20",
+"config"   => "21",
+"link"   => "22",
+"log"   => "24",
+"webmail"   => "25",
+"ip"   => "26",
+"admin"   => "27",
+"marquee"   => "30",
+"resource"   => "31",
+"resource"   => "32",
+"cours"   => "33",
+"wiki"   => "34",
+"cursus"   => "35",
+"chs"   => "37",
+"student"   => "38",
+"support"   => "39",
+"stage"   => "40",
+"etp"   => "45",
+"quizz"   => "50",
+"notes"   => "60",
+"uc"   => "61",
+"exam"   => "62",
+"absent"   => "63",
+"edt"   => "64",
+"suggest"   => "65",
+"carnet"   => "66",
+"retenu"   => "67",
+"ccn"   => "68",
+"page"   => "91",
+"log"   => "92",
+"vote"   => "99",
+"user"   => "1",
+"server/valid"   => "101",
+"mail"   => "111",
+"traduction"   => "112",
+
+	);
+
+//---------------------------------------------------------------------------
+?>
+
+
+
+<div class="maintitle" style="background-image: url('<?php echo $_SESSION["CfgHeader"]; ?>'); background-repeat: repeat;">
+	<div style="text-align: center;">
+		<?php print($msg->read($TRADUCTION_TITLE)); ?>
+	</div>
+</div>
+
+<div class="maincontent">
+
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th><?php print($msg->read($TRADUCTION_MODULE)); ?></th>
+                  <th><?php print($msg->read($TRADUCTION_LANGUAGE)); ?></th>
+                </tr>
+              </thead>
+              <tbody>
+
+
+<?php
+
+// Liste des langues
+
+
+
+
+$dir = "./msg";
+$compteur = 1;
+$dirs = array_diff( scandir( $dir ), Array( ".", ".." ) );
+
+
+// Liste des langues disponibles
+
+$dirlang = Array();
+
+    foreach( $dirs as $filelang ){
+        if($filelang != '.' && $filelang != '..' && $filelang != '.DS_Store' && !strpos($filelang, 'dap') && substr($filelang, 0, 1) != '#' && !strpos($filelang, '.php'))
+			{
+        	$dirlang[] = $filelang;
+    		}
+    }
+
+$countdirlang = count($dirlang);
+
+//Tableau des fichiers
+
+    foreach( $dirs as $file ){
+
+        if($file != '.' && $file != '..' && strpos($file, 'php'))
+			{
+        	print "<tr><td>".$compteur++."</td><td>" .str_replace(".php", "", $file). " (".$numpage[str_replace(".php", "", $file)].")</td>";
+        	for ($i = 0; $i < $countdirlang; $i++) {
+    			print "<td><a href='index.php?item=112&cmde=gestion&tradlang=$dirlang[$i]&filemodule=".str_replace(".php", "", $file)."' class='btn'>".$dirlang[$i]."</a></td>";
+				}
+				print "</tr>";
+    		}
+    }
+
+
+?>
+
+
+              </tbody>
+            </table>
+
+
+</div>

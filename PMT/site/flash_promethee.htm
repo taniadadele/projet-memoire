@@ -1,0 +1,330 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2002-2007 by Dominique Laporte(C-E-D@wanadoo.fr)
+   Copyright (c) 2006 by Hugues Lecocq(hugues.lecocq@laposte.net)
+   Copyright (c) 2006 by Nordine Zetoutou (nordine.zetoutou@educagri.fr)
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : flash_promethee.htm
+ *		projet   : la page du flash info prométhée
+ *
+ *		version  : 1.2
+ *		auteur   : laporte
+ *		creation : 20/10/02
+ *		modif    : 30/05/03 - par D. Laporte
+ * 	                 lecture des codes smileys
+ *
+ * 	                 8/11/03 - par D. Laporte
+ * 	                 lien sur le texte de la licence d'utilisation
+ *
+ * 	                 15/05/04 - par D. Laporte
+ * 	                 les crédits
+ *
+ * 	                 15/06/06 - par hugues lecocq
+ * 	                 migration PHP5
+ *
+ *                     17/07/06 - Nordine Zetoutou
+ * 	                 migration des balises HTML en XHTML 1.0 strict
+ */
+
+
+/*
+$IDflash = ( @$_GET["IDflash"] )		// ID du flash info
+	? (int) $_GET["IDflash"]
+	: 1 ;
+*/
+$skpage  = ( @$_GET["skpage"] )		// n° de la page affichée
+	? (int) $_GET["skpage"]
+	: 1 ;
+$skshow  = ( @$_GET["skshow"] )		// n° du flash info
+	? (int) $_GET["skshow"]
+	: 1 ;
+
+//---------------------------------------------------------------------------
+function getsource($dirname)
+{
+/*
+ * fonction :	détermine l'ID de l'adresse IP de connexion
+ */
+	require "globals.php";
+
+	require "msg/flash.php";
+	require_once "include/TMessage.php";
+
+	$msg = new TMessage($_SESSION["ROOTDIR"]."/msg/".$_SESSION["lang"]."/flash.php");
+
+	// ouverture du répertoire des sources à télécharger
+	$dir = opendir($dirname);
+
+	// lecture des fichiers
+	$i = 0;
+	while ( $file = @readdir($dir) )
+		if ( is_file("$dirname/$file") AND extension($file) == "zip" ) {
+			$bgcol = ( $i++ % 2 ) ? "item" : "menu" ;
+
+			// initialisation
+			$path   = "$dirname/$file";
+			$date   = date("d/m/y", filectime($path));
+			$size   = filesize($path);		                		
+
+			// lecture du compteur des téléchargements
+			$result = mysqli_query($mysql_link, "select _IDdown, _count from download_data where _file = '$path'");
+			$down   = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+			$link   = ( $down[0] )
+				? "<a href=\"#\" onclick=\"popWin('".$_SESSION["ROOTDIR"]."/user_list.php?sid=".$_SESSION["sessID"]."&amp;IDdown=$down[0]&amp;cmde=dwload&amp;lang=".$_SESSION["lang"]."', '450', '200'); return false;\">$down[1]</a>"
+				: "0" ;
+
+			print("	                	
+	                    <table class=\"width100\">
+				    <tr class=\"$bgcol\">
+	                        <td style=\"width:1%;\"><img src=\"".$_SESSION["ROOTDIR"]."/images/ressources.png\" title=\"\" alt=\"\" /></td>
+	                        <td style=\"width:27%;\">
+	                        	<a href=\"". myurlencode("index.php?file=$path") ."\" onclick=\"window.open(this.href, '_blank'); return false;\">$file</a>
+	                        </td>
+	                        <td style=\"width:22%;\">
+	                        	<img src=\"".$_SESSION["ROOTDIR"]."/images/dot.gif\" title=\"\" alt=\"\" /> ". $msg->read($FLASH_DATE, $date) ."
+	                        </td>
+	                        <td style=\"width:22%;\">
+	                        	<img src=\"".$_SESSION["ROOTDIR"]."/images/dot.gif\" title=\"\" alt=\"\" /> ". $msg->read($FLASH_SIZE, strval($size)) ."
+	                        </td>
+	                        <td style=\"width:28%;\">
+	                        	<img src=\"".$_SESSION["ROOTDIR"]."/images/dot.gif\" title=\"\" alt=\"\" /> ". $msg->read($FLASH_DOWNLOAD, strval($link)) ."
+	                        </td>
+	                      </tr>
+	                    </table>
+				");
+			}
+
+	// fermeture du répertoire
+	closedir($dir);
+}
+//---------------------------------------------------------------------------
+?>
+
+<?php
+	// lecture de la base de données
+	$Query  = "select _IDinfos, _date, _modif, _ID from flash_data ";
+	$Query .= "where _IDflash = '$IDflash' ";
+	$Query .= "order by _IDinfos desc";
+
+	// détermination du nombre de pages
+	$result = mysqli_query($mysql_link, $Query);
+	$page   = ( $result ) ? mysqli_affected_rows($mysql_link) : 0 ;
+
+	$show   = 0;
+
+	if ( $page ) {
+		// initialisation
+		$first = $skpage;
+
+		// se positionne sur la page ad hoc
+		mysqli_data_seek($result, $first - 1);
+		$data  = mysqli_fetch_row($result);
+
+		// ID de la 1ère annonce
+		$IDinfos = $data[0];
+
+		$modif = ( $data[1] == $data[2] ) ? "" : $msg->read($FLASH_MODIFIED, $data[2]) ;
+
+		$show  = ( $page % $MAXSHOW )
+			? (int) ($page / $MAXSHOW) + 1
+			: (int) ($page / $MAXSHOW) ;
+
+		$owner  = $msg->read($FLASH_CREATED, Array(getUserNameByID($data[3]), $data[1], $modif));
+		$lien   = "<a href=\"".myurlencode("index.php?item=20&cmde=post&IDflash=$IDflash&IDinfos=$IDinfos&submit=Modifier")."\">". $msg->read($FLASH_MODIF) ."</a>";
+		}
+	else {
+		// initialisation
+		$owner  = "&nbsp;";
+		$lien   = "<a href=\"".myurlencode("index.php?item=20&cmde=post&IDflash=$IDflash")."\">". $msg->read($FLASH_FLASHCREATE) ."</a>";
+		}
+
+	// lecture de la base de données
+	$Query  = "select _IDmod from flash ";
+	$Query .= "where _IDflash = '$IDflash' ";
+
+	$result = mysqli_query($mysql_link, $Query);
+	$data   = ( $result ) ? mysqli_fetch_row($result) : 0 ;
+
+	$link   = ( $_SESSION["CnxAdm"] == 255 OR $_SESSION["CnxID"] == $data[0] )
+		? "[<em>$lien</em>]"
+		: "&nbsp;" ;
+?>
+
+
+<div class="maintitle" style="background-image: url('<?php echo $_SESSION["CfgHeader"]; ?>'); background-repeat: repeat; height: 30px;\">
+	<div class="medium" style="text-align: center;"><strong>Prométhée Online !</strong></div>
+	<div class="x-small" style="float: left;"><?php echo $owner; ?></div>
+	<div class="x-small" style="float: right;"><?php echo $link; ?></div>
+</div>
+
+<div class="maincontent" style="background-color:#ffffff">
+
+	<span style="text-align:justify;"><?php print($msg->read($FLASH_PROJECT)); ?></span>
+
+	<div style="padding-top: 10px; padding-left: 20px; padding-right: 20px; padding-bottom: 10px;">
+	<?php print($msg->read($FLASH_DISCLAIMER)); ?>
+	</div>
+
+	<div style="padding-top: 10px; padding-left: 40px; padding-right: 40px; padding-bottom: 10px;">
+	<?php
+		// affichage des crédits
+		$credits = $_SESSION["ROOTDIR"]."/msg/".$_SESSION["lang"]."/$CREDITS";
+
+		if ( is_file($credits) ) {
+			$fp = fopen($credits, "r");
+
+			while ( !feof($fp) ) {
+				$line = Trim( fgets($fp, 512) );
+
+				if ( strlen($line) AND $line[0] != '#' ) {
+					$mail = substr($line, strpos($line, "<") + 1, strpos($line, ">") - strpos($line, "<") - 1);
+					$name = substr($line, 0, strpos($line, "<") - 1);
+					$text = substr($line, strpos($line, ":"), 512);
+
+					print("
+						<img src=\"".$_SESSION["CfgPuce"]."\"  title=\"".$_SESSION["CfgPuce"]."\" alt=\"".$_SESSION["CfgPuce"]."\"  />
+						<a href=\"mailto:$mail\">$name</a> $text<br/>
+						");
+					}				
+				}
+
+			fclose($fp);
+			}
+		else
+			// affichage par défaut
+			print("
+				<img src=\"".$_SESSION["CfgPuce"]."\" title=\"\" alt=\"\" />
+				".$msg->read($FLASH_CED, "cedric.ghirardi@educagri.fr")."
+				<img src=\"".$_SESSION["CfgPuce"]."\" title=\"\" alt=\"\" /> 
+				".$msg->read($FLASH_DOM, "dominique.laporte@educagri.fr")
+				);
+	?>
+	</div>
+
+	<div style="padding-top: 10px; padding-left: 20px; padding-right: 20px; padding-bottom: 10px;">
+	<img src="<?php echo $_SESSION["ROOTDIR"]; ?>/images/bug.png" title="" alt="" />
+	<?php 
+		$subject = $msg->read($FLASH_BUGREPORT);
+		$body    = $msg->read($FLASH_BUG, $_SESSION["CnxName"]);
+
+		print($msg->read($FLASH_THANX, Array("mailto:dominique.laporte@educagri.fr?Subject=$subject&amp;Body=$body", $WEBSITE)));
+	?>
+	</div>
+
+	<?php
+		// visualisation du flash
+		require "flash_visu.php";
+
+		// bouton précédent
+		$where = $skshow - 1;
+		if ( $skshow == 1 )
+			$prev = "";
+		else {
+			$skpg = 1 + (($skshow - 2) * $MAXSHOW);
+			$prev = "[<a href=\"".myurlencode("index.php?item=$item&IDflash=$IDflash&skpage=$skpg&skshow=$where")."\">".$msg->read($FLASH_PREV)."</a>]";
+			}
+
+		// liens directs sur n° de page
+		$start = 1 + (($skshow - 1) * $MAXSHOW);
+		$end   = $skshow * $MAXSHOW;
+
+		$choix = ( $skpage == $start )
+			? "<img src=\"".$_SESSION["ROOTDIR"]."/images/nav_left.gif\" title=\"«\" alt=\"«\" /><strong>$start</strong><img src=\"".$_SESSION["ROOTDIR"]."/images/nav_right.gif\" title=\"»\" alt=\"»\" />"
+			: "<a href=\"".myurlencode("index.php?item=$item&IDflash=$IDflash&skpage=$start&skshow=$skshow")."\">$start</a>" ;
+
+		for ($j = $start + 1; $j <= $end AND $j <= $page; $j++)
+			$choix .= ( $skpage == $j )
+				? "|<img src=\"".$_SESSION["ROOTDIR"]."/images/nav_left.gif\" title=\"«\" alt=\"«\" /><strong>$j</strong><img src=\"".$_SESSION["ROOTDIR"]."/images/nav_right.gif\" title=\"»\" alt=\"»\" />"
+				: "|<a href=\"".myurlencode("index.php?item=$item&IDflash=$IDflash&skpage=$j&skshow=$skshow")."\">$j</a>" ;
+
+		// bouton suivant
+		$where = $skshow + 1;
+		$next  = ( $skshow == $show )
+			? ""
+			: "[<a href=\"".myurlencode("index.php?item=$item&IDflash=$IDflash&skpage=$j&skshow=$where")."\">".$msg->read($FLASH_NEXT)."</a>]" ;
+	?>
+
+	<hr/>
+		<?php if ( $page ) print("<div style=\"text-align:center;\">$prev $choix $next</div>"); ?>
+	<hr/>
+
+	<!-- pour télécharger les sources -->
+	<div style="border:#cccccc solid 1px; padding:0px; background-color:#f9f9f9;">
+
+	<table class="width100">
+         <tr>
+          <td style="text-align: justify">
+			<?php print($msg->read($FLASH_GPL)); ?>
+          </td>
+         </tr>
+
+          <tr>
+            <td style="text-align: justify">
+			<?php print($msg->read($FLASH_NOTUSE)); ?>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+		<?php
+			// ouverture du répertoire des sources à télécharger
+			$dirname = $_SESSION["ROOTDIR"]."/download/source";
+			getsource($dirname);
+
+			// ouverture du répertoire des sources à télécharger
+			$dir = opendir($dirname);
+
+			// lecture des fichiers
+			while ( $file = @readdir($dir) )
+				if ( is_dir("$dirname/$file") )
+					switch ( $file ) {
+						case "." :
+						case ".." :
+							break;
+
+						default :
+							print("
+								<div style=\"background-color:#cccccc; padding: 1px;\">
+									<img src=\"".$_SESSION["ROOTDIR"]."/images/folder-opened.gif\" title=\"\" alt=\"\" />
+									<strong>$dirname/$file</strong>
+								</div>");
+
+				                	getsource("$dirname/$file");
+							break;
+						}
+
+			// fermeture du répertoire
+			closedir($dir);
+		?>
+		</td>
+          </tr>
+
+          <tr>
+            <td style="text-align: justify">
+			<?php print($msg->read($FLASH_PETITION)); ?>
+            </td>
+          </tr>
+	</table>
+
+	</div>
+                        
+</div>

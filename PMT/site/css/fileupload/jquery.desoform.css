@@ -1,0 +1,22 @@
+span.desoform_result {
+	padding-left: 2px;
+	padding-right: 2px;
+	color: #B40404;
+	display: none;
+}
+
+.desoform_error {
+	background-image: url('../images/cross.png');
+	background-repeat: no-repeat;
+	background-position: right center;
+	border: 1px solid #B40404;
+	border-radius: 2px;
+}
+
+.desoform_ok {
+	background-image: url('../images/accept.png');
+	background-repeat: no-repeat;
+	background-position: right center;
+	border: 1px solid green;
+	border-radius: 2px;
+}

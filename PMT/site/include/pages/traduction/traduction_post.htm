@@ -1,0 +1,84 @@
+<?php
+/*-----------------------------------------------------------------------*
+   Copyright (c) 2014 by Hervé DAZY
+
+   This file is part of Prométhée.
+
+   Prométhée is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   Prométhée is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with Prométhée.  If not, see <http://www.gnu.org/licenses/>.
+ *-----------------------------------------------------------------------*/
+
+
+/*
+ *		module   : traduction.htm
+ *		projet   : la page de gestion des traductions
+ *
+ *		version  : 1.0
+ *		auteur   : IP SOLUTIONS
+ *		creation : 28/07/2014
+ *		modif    :
+ */
+
+
+
+
+	require "msg/traduction.php";
+	require_once "include/TMessage.php";
+
+	$msg  = new TMessage($_SESSION["ROOTDIR"]."/msg/".$_SESSION["lang"]."/traduction.php");
+	$tradlang    = @$_GET["tradlang"];
+	$filemodule    = @$_GET["filemodule"];
+
+if ($_POST) {
+  $posttrad = "";
+  foreach ($_POST as $key => $value) {
+	if ($key != "valid_x" && $key != "valid_y") $posttrad .= "\"".$value."\",\n";
+  }
+}
+
+$posttrad = substr($posttrad,0,-2);
+
+$pathfilemsg = $_SESSION["ROOTDIR"]."/msg/".$tradlang."/".$filemodule.".php";
+$compteur = 1;
+
+$filetrad  = file_get_contents($pathfilemsg, 'a+');
+$filetrad  = substr($filetrad, 0, strpos($filetrad, "message = Array(")+16);
+$filetrad .= "\n\n".$posttrad;
+$filetrad  = stripslashes($filetrad);
+$filetrad .= "\n\n";
+$filetrad .= ");\n";
+$filetrad .= "//---------------------------------------------------------------------------\n";
+$filetrad .= "?>\n";
+file_put_contents($pathfilemsg, html_entity_decode($filetrad));
+
+
+//---------------------------------------------------------------------------
+?>
+
+
+
+<div class="maintitle" style="background-image: url('<?php echo $_SESSION["CfgHeader"]; ?>'); background-repeat: repeat;">
+	<div style="text-align: center;">
+		<?php print($msg->read($TRADUCTION_LANGUAGE))." : ".$tradlang." / "; print($msg->read($TRADUCTION_MODULE))." : ".$filemodule; ?>
+	</div>
+</div>
+
+<div class="maincontent">
+
+    <div class="alert alert-success">
+	<?php print($msg->read($TRADUCTION_MAJOK)); ?>
+    </div>
+
+<a class="btn" href="index.php?item=112"><?php print($msg->read($TRADUCTION_TITLE)); ?></a>
+<a class="btn" href="index.php?item=112&cmde=gestion&tradlang=<?php print $tradlang; ?>&filemodule=<?php print $filemodule; ?>"><?php print($msg->read($TRADUCTION_LANGUAGE))." : ".$tradlang." / "; print($msg->read($TRADUCTION_MODULE))." : ".$filemodule; ?></a>
+</div>

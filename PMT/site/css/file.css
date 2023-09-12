@@ -1,0 +1,37 @@
+/* Feuille CSS de la GED */
+
+
+/* Le nom des fichiers dans la liste en mode tableau */
+.ged_file_list_file_name {
+  color: inherit;
+  font-weight: bold;
+}
+.ged_file_list_file_name:hover {
+  color: inherit;
+}
+
+/* Les options à droite de la ligne du tableau en mode liste */
+.file_options {
+  font-size: 20px;
+}
+
+/* Fil d'ariane */
+ol.breadcrumb {
+  background-color: transparent !important;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 0px;
+}
+
+
+
+/* On affiche le bouton 'i' d'information quand on hover sur l'élément */
+.ged_element_box_grid:hover .ged_element_box_grid_info_button,
+.ged_element_box_grid:hover ~ .ged_element_box_grid_info_button {
+    display: block !important;
+}
+
+
+/* Fond de couleur pour l'élément sélectionné en mode grille */
+.bg-primary-custom {
+  background-color: #c5ddff;
+}
